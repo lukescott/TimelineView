@@ -1,9 +1,7 @@
 //
-//  Timeline.h
-//  TimelineView
-//
-//  Created by Luke Scott on 3/4/13.
-//  Copyright (c) 2013 Luke Scott. All rights reserved.
+//  Copyright (c) 2013 Luke Scott
+//  https://github.com/lukescott/TimelineView
+//  Distributed under MIT license
 //
 
 #import <UIKit/UIKit.h>
