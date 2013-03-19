@@ -15,16 +15,16 @@
 - (void)timelineView:(TimelineView *)timelineView willDisplayCell:(TimelineViewCell *)cell atIndex:(NSInteger)index;
 - (void)timelineView:(TimelineView *)timelineView didEndDisplayingCell:(TimelineViewCell *)cell atIndex:(NSInteger)index;
 
-- (BOOL)timelineView:(TimelineView *)timelineView shouldSelectCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView willSelectCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView didSelectCellAtIndex:(NSInteger)index;
+- (BOOL)timelineView:(TimelineView *)timelineView shouldSelectItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView willSelectItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView didSelectItemAtIndex:(NSInteger)index;
 
-- (BOOL)timelineView:(TimelineView *)timelineView shouldDeselectCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView willDeselectCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView didDeselectCellAtIndex:(NSInteger)index;
+- (BOOL)timelineView:(TimelineView *)timelineView shouldDeselectItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView willDeselectItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView didDeselectItemAtIndex:(NSInteger)index;
 
-- (BOOL)timelineView:(TimelineView *)timelineView shouldHighlightCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView didHighlightCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView didUnhighlightCellAtIndex:(NSInteger)index;
+- (BOOL)timelineView:(TimelineView *)timelineView shouldHighlightItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView didHighlightItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView didUnhighlightItemAtIndex:(NSInteger)index;
 
 @end

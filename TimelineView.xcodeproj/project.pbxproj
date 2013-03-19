@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8E502ED816EC52750024BAAC /* SampleTimelineViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E502ED716EC52750024BAAC /* SampleTimelineViewCell.m */; };
+		8E5F2D7816F90C9E0062346E /* SampleTimelineViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8E5F2D7716F90C9E0062346E /* SampleTimelineViewCell.xib */; };
 		8E8A27F116E877E6007CAFFD /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E8A27F016E877E6007CAFFD /* UIKit.framework */; };
 		8E8A27F316E877E6007CAFFD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E8A27F216E877E6007CAFFD /* Foundation.framework */; };
 		8E8A27F516E877E6007CAFFD /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E8A27F416E877E6007CAFFD /* CoreGraphics.framework */; };
@@ -27,6 +28,7 @@
 /* Begin PBXFileReference section */
 		8E502ED616EC52750024BAAC /* SampleTimelineViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SampleTimelineViewCell.h; sourceTree = "<group>"; };
 		8E502ED716EC52750024BAAC /* SampleTimelineViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SampleTimelineViewCell.m; sourceTree = "<group>"; };
+		8E5F2D7716F90C9E0062346E /* SampleTimelineViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SampleTimelineViewCell.xib; sourceTree = "<group>"; };
 		8E8A27ED16E877E6007CAFFD /* TimelineView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimelineView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E8A27F016E877E6007CAFFD /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		8E8A27F216E877E6007CAFFD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -117,6 +119,7 @@
 				8E8A280F16E877E6007CAFFD /* ViewController.m */,
 				8E502ED616EC52750024BAAC /* SampleTimelineViewCell.h */,
 				8E502ED716EC52750024BAAC /* SampleTimelineViewCell.m */,
+				8E5F2D7716F90C9E0062346E /* SampleTimelineViewCell.xib */,
 				8E502ED516EC51C40024BAAC /* Classes */,
 				8E8A27F716E877E6007CAFFD /* Supporting Files */,
 			);
@@ -194,6 +197,7 @@
 				8E8A280716E877E6007CAFFD /* Default-568h@2x.png in Resources */,
 				8E8A280A16E877E6007CAFFD /* MainStoryboard_iPhone.storyboard in Resources */,
 				8E8A280D16E877E6007CAFFD /* MainStoryboard_iPad.storyboard in Resources */,
+				8E5F2D7816F90C9E0062346E /* SampleTimelineViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

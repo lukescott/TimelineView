@@ -17,8 +17,13 @@ typedef enum {
 @interface TimelineView : UIScrollView
 
 - (void)reloadData;
-- (void)registerClass:(Class)cellClass forCellReuseIdentifier:(NSString *)identifier;
-- (TimelineViewCell *)dequeueReuseableViewWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
+- (void)registerClass:(Class)cellClass forCellWithReuseIdentifier:(NSString *)identifier;
+- (void)registerNib:(UINib *)nib forCellWithReuseIdentifier:(NSString *)identifier;
+- (TimelineViewCell *)dequeueReusableCellWithReuseIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
+
+- (NSIndexSet *)indexesForVisibleItems;
+- (NSIndexSet *)indexesForSelectedItems;
+- (NSInteger)indexForSelectedItem;
 
 @property (weak, nonatomic) IBOutlet id<TimelineViewDataSource>dataSource;
 @property (weak, nonatomic) IBOutlet id<TimelineViewDelegate,UIScrollViewDelegate>delegate;

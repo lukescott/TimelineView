@@ -14,12 +14,12 @@
 
 - (CGSize)contentSizeForTimelineView:(TimelineView *)timelineView;
 - (NSInteger)numberOfCellsInTimelineView:(TimelineView *)timelineView;
-- (CGRect)timelineView:(TimelineView *)timelineView cellFrameForIndex:(NSInteger)index;
+- (CGRect)timelineView:(TimelineView *)timelineView frameForCellAtIndex:(NSInteger)index;
 - (TimelineViewCell *)timelineView:(TimelineView *)timelineView cellForIndex:(NSInteger)index;
 
 @optional
 
-- (BOOL)timelineView:(TimelineView *)timelineView canMoveCellAtIndex:(NSInteger)index;
-- (void)timelineView:(TimelineView *)timelineView moveCellAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame;
+- (BOOL)timelineView:(TimelineView *)timelineView canMoveItemAtIndex:(NSInteger)index;
+- (void)timelineView:(TimelineView *)timelineView moveItemAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame;
 
 @end

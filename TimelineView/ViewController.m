@@ -67,7 +67,11 @@
     // Can go in the horizontal direction as well
     //_timelineView.direction = TimelineScrollDirectionHorizontal;
     
-    [_timelineView registerClass:[SampleTimelineViewCell class] forCellReuseIdentifier:@"SampleTimelineViewCell"];
+    //[_timelineView registerClass:[SampleTimelineViewCell class]
+    //  forCellWithReuseIdentifier:@"SampleTimelineViewCell"];
+    
+    [_timelineView registerNib:[UINib nibWithNibName:@"SampleTimelineViewCell" bundle:nil]
+    forCellWithReuseIdentifier:@"SampleTimelineViewCell"];
 }
 
 - (CGSize)contentSizeForTimelineView:(TimelineView *)timelineView
@@ -84,14 +88,14 @@
     return data.count;
 }
 
-- (CGRect)timelineView:(TimelineView *)timelineView cellFrameForIndex:(NSInteger)index
+- (CGRect)timelineView:(TimelineView *)timelineView frameForCellAtIndex:(NSInteger)index
 {
     return CGRectFromString([[data objectAtIndex:index] objectForKey:@"rect"]);
 }
 
 - (TimelineViewCell *)timelineView:(TimelineView *)timelineView cellForIndex:(NSInteger)index
 {
-    SampleTimelineViewCell *cell = (SampleTimelineViewCell*)[timelineView dequeueReuseableViewWithIdentifier:@"SampleTimelineViewCell" forIndex:index];
+    SampleTimelineViewCell *cell = (SampleTimelineViewCell*)[timelineView dequeueReusableCellWithReuseIdentifier:@"SampleTimelineViewCell" forIndex:index];
     NSDictionary *info = [data objectAtIndex:index];
     
     cell.color = info[@"color"];
@@ -100,12 +104,12 @@
     return cell;
 }
 
-- (BOOL)timelineView:(TimelineView *)timelineView canMoveCellAtIndex:(NSInteger)index
+- (BOOL)timelineView:(TimelineView *)timelineView canMoveItemAtIndex:(NSInteger)index
 {
     return YES;
 }
 
-- (void)timelineView:(TimelineView *)timelineView moveCellAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame
+- (void)timelineView:(TimelineView *)timelineView moveItemAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame
 {
     NSDictionary *info = [[data objectAtIndex:sourceIndex] mutableCopy];
     

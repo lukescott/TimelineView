@@ -7,6 +7,7 @@
 #import "TimelineViewCell.h"
 
 @interface TimelineViewCell ()
+@property (strong, nonatomic) NSString *reuseIdentifier;
 @property (assign, nonatomic) NSInteger index;
 @end
 

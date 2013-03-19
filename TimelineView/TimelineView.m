@@ -32,23 +32,22 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 
 @interface TimelineView ()
 {
+    NSMutableDictionary *registeredPrototypes;
+    NSMutableDictionary *cacheFrameLookup;
+    NSInteger cellCount;
     NSMutableSet *visibleCells;
     NSMutableSet *recycledCells;
-    NSMutableDictionary *registeredClasses;
-    NSInteger cellCount;
-    NSRange visibleRange;
-    NSMutableDictionary *cacheFrameLookup;
-    
-    NSMutableSet *selectedIndexes;
+    NSMutableIndexSet *selectedIndexes;
     TimelineViewCell *touchedCell;
     _TouchMode touchMode;
     CGPoint lastPoint;
     NSTimer *scrollingTimer;
-    BOOL reordering;
+    BOOL updating;
 }
 @end
 
 @interface TimelineViewCell ()
+@property (strong, nonatomic) NSString *reuseIdentifier;
 @property (assign, nonatomic) NSInteger index;
 @end
 
@@ -70,9 +69,9 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 {
     recycledCells = [[NSMutableSet alloc] init];
     visibleCells = [[NSMutableSet alloc] init];
-    registeredClasses = [[NSMutableDictionary alloc] init];
+    registeredPrototypes = [[NSMutableDictionary alloc] init];
     cacheFrameLookup = [[NSMutableDictionary alloc] initWithCapacity:FRAME_CACHE_SIZE];
-    selectedIndexes = [[NSMutableSet alloc] init];
+    selectedIndexes = [[NSMutableIndexSet alloc] init];
     
     tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGestureRecognizer:)];
     longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPressGestureRecognizer:)];
@@ -115,12 +114,17 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 #pragma mark Public
 #pragma mark -
 
-- (void)registerClass:(Class)cellClass forCellReuseIdentifier:(NSString *)identifier
+- (void)registerClass:(Class)cellClass forCellWithReuseIdentifier:(NSString *)identifier
 {
-    [registeredClasses setObject:cellClass forKey:identifier];
+    [registeredPrototypes setObject:cellClass forKey:identifier];
 }
 
-- (TimelineViewCell *)dequeueReuseableViewWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index
+- (void)registerNib:(UINib *)nib forCellWithReuseIdentifier:(NSString *)identifier
+{
+    [registeredPrototypes setObject:nib forKey:identifier];
+}
+
+- (TimelineViewCell *)dequeueReusableCellWithReuseIdentifier:(NSString *)identifier forIndex:(NSInteger)index
 {
     TimelineViewCell *dequeuedCell;
     
@@ -133,7 +137,22 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
         }
     }
     if(!dequeuedCell) {
-        dequeuedCell = [[registeredClasses[identifier] alloc] initWithReuseIdentifier:identifier];
+        id prototype = registeredPrototypes[identifier];
+        if([prototype isKindOfClass:[UINib class]]) {
+            NSArray *objects = [(UINib *)prototype instantiateWithOwner:nil options:nil];
+            dequeuedCell = [objects lastObject];
+            
+            if(objects.count != 1 || ! [dequeuedCell isKindOfClass:[TimelineViewCell class]]) {
+                @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                               reason:[NSString stringWithFormat:@"invalid nib registered for identifier (%@) - nib must contain exactly one top level object which must be a TimelineViewCell instance", identifier]
+                                             userInfo:nil];
+            }
+            
+            dequeuedCell.reuseIdentifier = identifier;
+        }
+        else {
+            dequeuedCell = [[prototype alloc] initWithReuseIdentifier:identifier];
+        }
     }
     
     return dequeuedCell;
@@ -183,7 +202,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     return cell;
 }
 
-- (CGRect)frameForCellAtIndex:(NSInteger)index
+- (CGRect)frameForItemAtIndex:(NSInteger)index
 {
     NSValue *rectVal = [cacheFrameLookup objectForKey:@(index)];
     CGRect rect;
@@ -191,7 +210,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
         rect = [rectVal CGRectValue];
     }
     else {
-        rect = [dataSource timelineView:self cellFrameForIndex:index];
+        rect = [dataSource timelineView:self frameForCellAtIndex:index];
         [cacheFrameLookup setObject:[NSValue valueWithCGRect:rect] forKey:@(index)];
     }
     
@@ -210,7 +229,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 {
     [super layoutSubviews];
     
-    if(reordering) {
+    if(updating) {
         return;
     }
     if(CGSizeEqualToSize(self.contentSize, CGSizeZero)) {
@@ -248,7 +267,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     estIndex = MAX(0, estIndex);
     
     for(NSInteger i = estIndex; i >= 0; i-=2) {
-        CGRect cellFrame = [self frameForCellAtIndex:i];
+        CGRect cellFrame = [self frameForItemAtIndex:i];
         if(CGRectGetMinY(cellFrame) > maxY) {
             continue;
         }
@@ -262,7 +281,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     }
     
     for(NSInteger i = estIndex; i < count; ++i) {
-        CGRect cellFrame = [self frameForCellAtIndex:i];
+        CGRect cellFrame = [self frameForItemAtIndex:i];
         if(CGRectGetMaxY(cellFrame) < minY) {
             minIndex = i;
             continue;
@@ -294,7 +313,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     estIndex = MAX(0, estIndex);
     
     for(NSInteger i = estIndex; i >= 0; i-=2) {
-        CGRect cellFrame = [self frameForCellAtIndex:i];
+        CGRect cellFrame = [self frameForItemAtIndex:i];
         if(CGRectGetMinX(cellFrame) > maxX) {
             continue;
         }
@@ -308,7 +327,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     }
     
     for(NSInteger i = estIndex; i < count; ++i) {
-        CGRect cellFrame = [self frameForCellAtIndex:i];
+        CGRect cellFrame = [self frameForItemAtIndex:i];
         if(CGRectGetMaxX(cellFrame) < minX) {
             minIndex = i;
             continue;
@@ -374,13 +393,13 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
                 continue;
             }
             
-            CGRect cellFrame = [self frameForCellAtIndex:index];
+            CGRect cellFrame = [self frameForItemAtIndex:index];
             TimelineViewCell *cell = [dataSource timelineView:self cellForIndex:index];
             
             cell.frame = cellFrame;
             cell.index = index;
             
-            if([selectedIndexes member:@(index)]) {
+            if([selectedIndexes containsIndex:index]) {
                 cell.selected = YES;
             }
             
@@ -468,8 +487,8 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 
 - (BOOL)startSelectingCell:(TimelineViewCell *)cell
 {
-    if([delegate respondsToSelector:@selector(timelineView:shouldHighlightCellAtIndex:)] &&
-       [delegate timelineView:self shouldHighlightCellAtIndex:cell.index] == NO)
+    if([delegate respondsToSelector:@selector(timelineView:shouldHighlightItemAtIndex:)] &&
+       [delegate timelineView:self shouldHighlightItemAtIndex:cell.index] == NO)
     {
         return NO;
     }
@@ -477,17 +496,16 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     cell.highlighted = YES;
     [self bringSubviewToFront:cell];
     
-    if([delegate respondsToSelector:@selector(timelineView:didHighlightCellAtIndex:)]) {
-        [delegate timelineView:self didHighlightCellAtIndex:cell.index];
+    if([delegate respondsToSelector:@selector(timelineView:didHighlightItemAtIndex:)]) {
+        [delegate timelineView:self didHighlightItemAtIndex:cell.index];
     }
     
     if(allowsMultipleSelection == NO) {
         for(TimelineViewCell *otherCell in visibleCells) {
-            if(otherCell != cell && [selectedIndexes member:@(otherCell.index)]) {
+            if(otherCell != cell && [selectedIndexes containsIndex:otherCell.index]) {
                 otherCell.selected = NO;
             }
         }
-        [selectedIndexes intersectSet:[NSSet setWithObject:cell]];
     }
     
     return YES;
@@ -497,8 +515,8 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 {
     cell.highlighted = NO;
     
-    if([delegate respondsToSelector:@selector(timelineView:didUnhighlightCellAtIndex:)]) {
-        [delegate timelineView:self didUnhighlightCellAtIndex:cell.index];
+    if([delegate respondsToSelector:@selector(timelineView:didUnhighlightItemAtIndex:)]) {
+        [delegate timelineView:self didUnhighlightItemAtIndex:cell.index];
     }
 }
 
@@ -508,34 +526,38 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     
     cell.highlighted = NO;
     
-    if([delegate respondsToSelector:@selector(timelineView:didUnhighlightCellAtIndex:)]) {
-        [delegate timelineView:self didUnhighlightCellAtIndex:cellIndex];
+    if([delegate respondsToSelector:@selector(timelineView:didUnhighlightItemAtIndex:)]) {
+        [delegate timelineView:self didUnhighlightItemAtIndex:cellIndex];
     }
     
-    if(! allowsMultipleSelection || ! [selectedIndexes member:@(cellIndex)]) {
-        if([delegate respondsToSelector:@selector(timelineView:willSelectCellAtIndex:)]) {
-            [delegate timelineView:self willSelectCellAtIndex:cellIndex];
+    if(! allowsMultipleSelection) {
+        [selectedIndexes removeAllIndexes];
+    }
+    
+    if(! allowsMultipleSelection || ! [selectedIndexes containsIndex:cellIndex]) {
+        if([delegate respondsToSelector:@selector(timelineView:willSelectItemAtIndex:)]) {
+            [delegate timelineView:self willSelectItemAtIndex:cellIndex];
         }
         
         cell.selected = YES;
-        [selectedIndexes addObject:@(cellIndex)];
+        [selectedIndexes addIndex:cellIndex];
         
-        if([delegate respondsToSelector:@selector(timelineView:didSelectCellAtIndex:)]) {
-            [delegate timelineView:self didSelectCellAtIndex:cellIndex];
+        if([delegate respondsToSelector:@selector(timelineView:didSelectItemAtIndex:)]) {
+            [delegate timelineView:self didSelectItemAtIndex:cellIndex];
         }
     }
-    else if([delegate respondsToSelector:@selector(timelineView:shouldDeselectCellAtIndex:)] == NO ||
-            [delegate timelineView:self shouldDeselectCellAtIndex:cellIndex] == YES)
+    else if([delegate respondsToSelector:@selector(timelineView:shouldDeselectItemAtIndex:)] == NO ||
+            [delegate timelineView:self shouldDeselectItemAtIndex:cellIndex] == YES)
     {
-        if([delegate respondsToSelector:@selector(timelineView:willDeselectCellAtIndex:)]) {
-            [delegate timelineView:self willDeselectCellAtIndex:cellIndex];
+        if([delegate respondsToSelector:@selector(timelineView:willDeselectItemAtIndex:)]) {
+            [delegate timelineView:self willDeselectItemAtIndex:cellIndex];
         }
         
         cell.selected = NO;
-        [selectedIndexes removeObject:@(cellIndex)];
+        [selectedIndexes removeIndex:cellIndex];
         
-        if([delegate respondsToSelector:@selector(timelineView:didDeselectCellAtIndex:)]) {
-            [delegate timelineView:self didDeselectCellAtIndex:cellIndex];
+        if([delegate respondsToSelector:@selector(timelineView:didDeselectItemAtIndex:)]) {
+            [delegate timelineView:self didDeselectItemAtIndex:cellIndex];
         }
     }
 }
@@ -545,8 +567,8 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 
 - (BOOL)canDragCell:(TimelineViewCell *)cell
 {
-    return [dataSource respondsToSelector:@selector(timelineView:canMoveCellAtIndex:)] &&
-           [dataSource timelineView:self canMoveCellAtIndex:cell.index];
+    return [dataSource respondsToSelector:@selector(timelineView:canMoveItemAtIndex:)] &&
+    [dataSource timelineView:self canMoveItemAtIndex:cell.index];
 }
 
 - (void)startDraggingCell:(TimelineViewCell *)cell
@@ -596,7 +618,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     NSInteger newIndex = 0;
     NSRange range;
     
-    reordering = YES;
+    updating = YES;
     [self invalidateScrollTimer];
     cell.dragging = NO;
     
@@ -614,7 +636,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
         ++newIndex;
     }
     
-    if([dataSource respondsToSelector:@selector(timelineView:moveCellAtIndex:toIndex:withFrame:)]) {
+    if([dataSource respondsToSelector:@selector(timelineView:moveItemAtIndex:toIndex:withFrame:)]) {
         if(newIndex != oldIndex) {
             [visibleCells removeObject:cell];
             
@@ -635,14 +657,10 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
             [visibleCells addObject:cell];
         }
         
-        [dataSource timelineView:self moveCellAtIndex:oldIndex toIndex:newIndex withFrame:cell.frame];
+        [dataSource timelineView:self moveItemAtIndex:oldIndex toIndex:newIndex withFrame:cell.frame];
     }
     
-//    for (TimelineViewCell *otherCell in visibleCells) {
-//        NSLog(@"%d", otherCell.index);
-//    }
-    
-    reordering = NO;
+    updating = NO;
     [cacheFrameLookup removeAllObjects];
     [self tileCells];
 }
@@ -707,6 +725,27 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     self.contentOffset = contentOffset;
     lastPoint = CGPointAdd_(lastPoint, distance);
     touchedCell.center = CGPointAdd_(touchedCell.center, distance);
+}
+
+- (NSIndexSet *)indexesForVisibleItems
+{
+    NSMutableIndexSet *visibleIndexes = [[NSMutableIndexSet alloc] init];
+    
+    for(TimelineViewCell *cell in visibleCells) {
+        [visibleIndexes addIndex:cell.index];
+    }
+    
+    return [[NSIndexSet alloc] initWithIndexSet:visibleIndexes];
+}
+
+- (NSIndexSet *)indexesForSelectedItems
+{
+    return [[NSIndexSet alloc] initWithIndexSet:selectedIndexes];
+}
+
+- (NSInteger)indexForSelectedItem
+{
+    return [selectedIndexes firstIndex];
 }
 
 @end

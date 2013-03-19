@@ -8,6 +8,6 @@
 
 @interface SampleTimelineViewCell : TimelineViewCell
 
-@property (readonly, nonatomic) UILabel *label;
+@property (readonly, nonatomic) IBOutlet UILabel *label;
 @property (strong, nonatomic) UIColor *color;
 @end
