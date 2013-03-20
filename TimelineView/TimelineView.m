@@ -42,7 +42,13 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     _TouchMode touchMode;
     CGPoint lastPoint;
     NSTimer *scrollingTimer;
+    NSMutableSet *batchDelete;
+    NSMutableSet *batchInsert;
+    BOOL batching;
     BOOL updating;
+    
+    NSInteger maxOld;
+    NSInteger maxNew;
 }
 @end
 
@@ -54,9 +60,10 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 @implementation TimelineView
 @synthesize dataSource;
 @synthesize delegate;
-@synthesize direction;
 @synthesize tapGestureRecognizer;
 @synthesize longPressGestureRecognizer;
+@synthesize scrollDirection;
+@synthesize allowsSelection;
 @synthesize allowsMultipleSelection;
 @synthesize scrollingEdgeInsets;
 @synthesize scrollingSpeed;
@@ -213,16 +220,15 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
         rect = [dataSource timelineView:self frameForCellAtIndex:index];
         [cacheFrameLookup setObject:[NSValue valueWithCGRect:rect] forKey:@(index)];
     }
-    
     return rect;
 }
 
 #pragma mark Cell placement
 #pragma mark -
 
-- (void)setDirection:(TimelineScrollDirection)newDirection
+- (void)setScrollDirection:(TimelineViewScrollDirection)newDirection
 {
-    direction = newDirection;
+    scrollDirection = newDirection;
 }
 
 - (void)layoutSubviews
@@ -240,48 +246,73 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     }
 }
 
-- (NSRange)findRangeForCellCount:(NSInteger)count inBounds:(CGRect)bounds withContentSize:(CGSize)contentSize
+- (NSRange)findRangeInRect:(CGRect)rect
 {
-    if(direction == TimelineScrollDirectionVertical) {
-        return [self verticalRangeForCellCount:count
-                                      inBounds:bounds
-                               withContentSize:contentSize];
+    if(scrollDirection == TimelineViewScrollDirectionVertical) {
+        return [self verticalRangeInRect:rect];
     }
     else {
-        return [self horizontalRangeForCellCount:count
-                                        inBounds:bounds
-                                 withContentSize:contentSize];
+        return [self horizontalRangeInRect:rect];
     }
 }
 
-- (NSRange)verticalRangeForCellCount:(NSInteger)count inBounds:(CGRect)bounds withContentSize:(CGSize)contentSize
+- (NSRange)verticalRangeInRect:(CGRect)rect
 {
-    CGFloat minY = CGRectGetMinY(bounds);
-    CGFloat maxY = CGRectGetMaxY(bounds);
-    NSInteger estIndex = (NSInteger)(floor((double)count * ((double)minY / (double)contentSize.height)) / 2) * 2;
-    NSInteger minIndex = NSNotFound;
-    NSInteger startIndex = NSNotFound;
-    NSInteger endIndex = 0;
+    CGFloat minY = CGRectGetMinY(rect);
+    CGFloat maxY = CGRectGetMaxY(rect);
+    NSInteger count = cellCount;
+    NSRange searchRange = NSMakeRange(0, count);
+    NSInteger estIndex = 0; // Nearest index
+    NSInteger minIndex = NSNotFound; // Index closest to top
+    NSInteger startIndex = NSNotFound; // First visible index
+    NSInteger endIndex = 0; // Last visible index
+    CGRect cellFrame;
+    CGFloat cellMinY;
     
-    estIndex = MIN(count - 1, estIndex);
-    estIndex = MAX(0, estIndex);
+    // Discover closest visible index using binary tree
+    for(;;) {
+        estIndex = round((searchRange.location * 2 + searchRange.length - 1) / 2);
+        cellFrame = [self frameForItemAtIndex:estIndex];
+        cellMinY = CGRectGetMinY(cellFrame);
+        
+        if(CGRectIntersectsRect(cellFrame, rect)) {
+            break;
+        }
+        
+        if(cellMinY > minY) {
+            searchRange = NSMakeRange(searchRange.location, searchRange.length / 2);
+        }
+        else if(cellMinY < minY) {
+            searchRange = NSMakeRange(estIndex + 1, searchRange.length / 2 - 1);
+        }
+        
+        if(searchRange.length < 2) {
+            break;
+        }
+    }
     
-    for(NSInteger i = estIndex; i >= 0; i-=2) {
-        CGRect cellFrame = [self frameForItemAtIndex:i];
+    // Work backward to find starting index
+    for(NSInteger i = estIndex; i >= 0; --i) {
+        cellFrame = [self frameForItemAtIndex:i];
+        
         if(CGRectGetMinY(cellFrame) > maxY) {
             continue;
         }
         
         minIndex = i;
-        estIndex = i;
         
         if(CGRectGetMaxY(cellFrame) < minY) {
             break;
         }
+        
+        startIndex = i;
+        endIndex = i;
     }
     
+    // Work forward to discover ending index
     for(NSInteger i = estIndex; i < count; ++i) {
-        CGRect cellFrame = [self frameForItemAtIndex:i];
+        cellFrame = [self frameForItemAtIndex:i];
+        
         if(CGRectGetMaxY(cellFrame) < minY) {
             minIndex = i;
             continue;
@@ -289,6 +320,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
         if(CGRectGetMinY(cellFrame) > maxY) {
             break;
         }
+        
         startIndex = MIN(startIndex, i);
         endIndex = MAX(endIndex, i);
     }
@@ -300,34 +332,63 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     return (NSRange){startIndex, endIndex - startIndex + 1};
 }
 
-- (NSRange)horizontalRangeForCellCount:(NSInteger)count inBounds:(CGRect)bounds withContentSize:(CGSize)contentSize
+- (NSRange)horizontalRangeInRect:(CGRect)rect
 {
-    CGFloat minX = CGRectGetMinY(bounds);
-    CGFloat maxX = CGRectGetMaxY(bounds);
-    NSInteger estIndex = (NSInteger)(floor((double)count * ((double)minX / (double)contentSize.width)) / 2) * 2;
-    NSInteger minIndex = NSNotFound;
-    NSInteger startIndex = NSNotFound;
-    NSInteger endIndex = 0;
+    CGFloat minX = CGRectGetMinX(rect);
+    CGFloat maxX = CGRectGetMaxX(rect);
+    NSInteger count = cellCount;
+    NSRange searchRange = NSMakeRange(0, count);
+    NSInteger estIndex = 0; // Nearest index
+    NSInteger minIndex = NSNotFound; // Index closest to top
+    NSInteger startIndex = NSNotFound; // First visible index
+    NSInteger endIndex = 0; // Last visible index
+    CGRect cellFrame;
+    CGFloat cellMinX;
     
-    estIndex = MIN(count - 1, estIndex);
-    estIndex = MAX(0, estIndex);
+    // Discover closest visible index using binary tree
+    for(;;) {
+        estIndex = round((searchRange.location * 2 + searchRange.length - 1) / 2);
+        cellFrame = [self frameForItemAtIndex:estIndex];
+        cellMinX = CGRectGetMinX(cellFrame);
+        
+        if(CGRectIntersectsRect(cellFrame, rect)) {
+            break;
+        }
+        
+        if(cellMinX > minX) {
+            searchRange = NSMakeRange(searchRange.location, searchRange.length / 2);
+        }
+        else if(cellMinX < minX) {
+            searchRange = NSMakeRange(estIndex + 1, searchRange.length / 2 - 1);
+        }
+        
+        if(searchRange.length < 2) {
+            break;
+        }
+    }
     
-    for(NSInteger i = estIndex; i >= 0; i-=2) {
-        CGRect cellFrame = [self frameForItemAtIndex:i];
+    // Work backward to find starting index
+    for(NSInteger i = estIndex; i >= 0; --i) {
+        cellFrame = [self frameForItemAtIndex:i];
+        
         if(CGRectGetMinX(cellFrame) > maxX) {
             continue;
         }
         
         minIndex = i;
-        estIndex = i;
         
         if(CGRectGetMaxX(cellFrame) < minX) {
             break;
         }
+        
+        startIndex = i;
+        endIndex = i;
     }
     
+    // Work forward to discover ending index
     for(NSInteger i = estIndex; i < count; ++i) {
-        CGRect cellFrame = [self frameForItemAtIndex:i];
+        cellFrame = [self frameForItemAtIndex:i];
+        
         if(CGRectGetMaxX(cellFrame) < minX) {
             minIndex = i;
             continue;
@@ -335,6 +396,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
         if(CGRectGetMinX(cellFrame) > maxX) {
             break;
         }
+        
         startIndex = MIN(startIndex, i);
         endIndex = MAX(endIndex, i);
     }
@@ -348,21 +410,15 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 
 - (void)tileCells
 {
-    NSRange currentRange;
+    NSRange range;
     NSInteger startIndex = NSNotFound;
     NSInteger endIndex = 0;
     
-    if(cacheFrameLookup.count >= FRAME_CACHE_SIZE) {
-        [cacheFrameLookup removeAllObjects];
-    }
+    range = [self findRangeInRect:self.bounds];
     
-    currentRange = [self findRangeForCellCount:cellCount
-                                      inBounds:self.bounds
-                               withContentSize:self.contentSize];
-    
-    if(currentRange.length > 0) {
-        startIndex = currentRange.location;
-        endIndex = currentRange.location + currentRange.length - 1;
+    if(range.length > 0) {
+        startIndex = range.location;
+        endIndex = range.location + range.length - 1;
     }
     
     for(TimelineViewCell *cell in visibleCells) {
@@ -422,8 +478,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     CGPoint point = [gestureRecognizer locationInView:self];;
     TimelineViewCell *cell = [self cellAtPoint:point];
     
-    if(cell) {
-        [self startSelectingCell:cell];
+    if(cell && [self startSelectingCell:cell]) {
         [self finishSelectingCell:cell];
     }
 }
@@ -485,8 +540,43 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 #pragma mark Highlight / Select
 #pragma mark -
 
+- (void)setAllowsSelection:(BOOL)value
+{
+    allowsSelection = value;
+    
+    if(!value && selectedIndexes.count > 0) {
+        for(TimelineViewCell *cell in visibleCells) {
+            if([selectedIndexes containsIndex:cell.index]) {
+                cell.selected = NO;
+            }
+        }
+        [selectedIndexes removeAllIndexes];
+    }
+}
+
+- (void)setAllowsMultipleSelection:(BOOL)value
+{
+    allowsMultipleSelection = value;
+    
+    if(!value && selectedIndexes.count > 1) {
+        NSUInteger firstIndex = [selectedIndexes firstIndex];
+        for(TimelineViewCell *cell in visibleCells) {
+            NSInteger cellIndex = cell.index;
+            if(cellIndex != firstIndex && [selectedIndexes containsIndex:cellIndex]) {
+                cell.selected = NO;
+            }
+        }
+        [selectedIndexes removeAllIndexes];
+        [selectedIndexes addIndex:firstIndex];
+    }
+}
+
 - (BOOL)startSelectingCell:(TimelineViewCell *)cell
 {
+    if(allowsSelection) {
+        return NO;
+    }
+    
     if([delegate respondsToSelector:@selector(timelineView:shouldHighlightItemAtIndex:)] &&
        [delegate timelineView:self shouldHighlightItemAtIndex:cell.index] == NO)
     {
@@ -579,7 +669,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 
 - (void)dragCell:(TimelineViewCell *)cell distance:(CGPoint)distance
 {
-    if(direction == TimelineScrollDirectionVertical) {
+    if(scrollDirection == TimelineViewScrollDirectionVertical) {
         distance.x = 0;
     }
     else {
@@ -588,7 +678,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     
     cell.center = CGPointAdd_(cell.center, distance);
     
-    if(direction == TimelineScrollDirectionVertical) {
+    if(scrollDirection == TimelineViewScrollDirectionVertical) {
         if(CGRectGetMaxY(cell.frame) > CGRectGetMaxY(self.bounds) - scrollingEdgeInsets.top) {
             [self setupScrollTimerInDirection:_ScrollingDirectionForward];
         }
@@ -622,9 +712,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     [self invalidateScrollTimer];
     cell.dragging = NO;
     
-    range = [self findRangeForCellCount:cellCount
-                               inBounds:cell.frame
-                        withContentSize:self.contentSize];
+    range = [self findRangeInRect:cell.frame];
     
     oldIndex = cell.index;
     newIndex = range.location;
@@ -704,7 +792,7 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     CGPoint contentOffset = currentOffset;
     CGPoint distance;
     
-    if(direction == TimelineScrollDirectionVertical) {
+    if(scrollDirection == TimelineViewScrollDirectionVertical) {
         if(dir == _ScrollingDirectionBackward) {
             contentOffset.y = MAX(0, currentOffset.y - scrollingDistance);
         }
@@ -727,7 +815,35 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     touchedCell.center = CGPointAdd_(touchedCell.center, distance);
 }
 
-- (NSIndexSet *)indexesForVisibleItems
+- (NSInteger)indexForSelectedItem
+{
+    return [selectedIndexes firstIndex];
+}
+
+- (NSInteger)indexForItemAtPoint:(CGPoint)point
+{
+    NSRange range = [self findRangeInRect:CGRectMake(point.x, point.y, 1, 1)];
+    
+    return range.length > 0 ? range.location : NSNotFound;
+}
+
+- (NSIndexSet *)indexSetForSelectedItems
+{
+    return [[NSIndexSet alloc] initWithIndexSet:selectedIndexes];
+}
+
+- (NSIndexSet *)indexSetForItemsInRect:(CGRect)rect
+{
+    NSRange range = [self findRangeInRect:rect];
+    
+    if(!range.length) {
+        return nil;
+    }
+    
+    return [NSIndexSet indexSetWithIndexesInRange:range];
+}
+
+- (NSIndexSet *)indexSetForVisibleItems
 {
     NSMutableIndexSet *visibleIndexes = [[NSMutableIndexSet alloc] init];
     
@@ -738,14 +854,93 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
     return [[NSIndexSet alloc] initWithIndexSet:visibleIndexes];
 }
 
-- (NSIndexSet *)indexesForSelectedItems
+- (NSArray *)visibleCells
 {
-    return [[NSIndexSet alloc] initWithIndexSet:selectedIndexes];
+    return [visibleCells allObjects];
 }
 
-- (NSInteger)indexForSelectedItem
+- (TimelineViewCell *)cellForItemAtIndex:(NSInteger)index
 {
-    return [selectedIndexes firstIndex];
+    TimelineViewCell *cell;
+    for(TimelineViewCell *otherCell in visibleCells) {
+        if(otherCell.index == index) {
+            cell = otherCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (void)selectItemAtIndex:(NSInteger)index
+{
+    if(!allowsSelection) {
+        return;
+    }
+    for(TimelineViewCell *cell in visibleCells) {
+        if(cell.index == index) {
+            cell.selected = YES;
+        }
+        else if (!allowsMultipleSelection) {
+            cell.selected = NO;
+        }
+    }
+    if(!allowsMultipleSelection) {
+        [selectedIndexes removeAllIndexes];
+    }
+    [selectedIndexes addIndex:index];
+}
+
+- (void)deselectItemAtIndex:(NSInteger)index
+{
+    if(!allowsSelection) {
+        return;
+    }
+    for(TimelineViewCell *cell in visibleCells) {
+        if(cell.index == index) {
+            cell.selected = NO;
+        }
+    }
+    [selectedIndexes removeIndex:index];
+}
+
+- (void)scrollToItemAtIndex:(NSInteger)index atScrollPosition:(TimelineViewScrollPosition)scrollPosition animated:(BOOL)animated
+{
+    CGRect cellFrame = [self frameForItemAtIndex:index];
+    CGPoint contentOffset = self.contentOffset;
+    CGSize size = self.bounds.size;
+    
+    if(CGRectEqualToRect(cellFrame, CGRectZero)) {
+        return;
+    }
+    
+    switch (scrollPosition) {
+        case TimelineViewScrollPositionTop:
+            if(scrollDirection == TimelineViewScrollDirectionVertical) {
+                contentOffset.y = CGRectGetMinY(cellFrame);
+            }
+            else {
+                contentOffset.x = CGRectGetMinX(cellFrame);
+            }
+            break;
+        case TimelineViewScrollPositionCenter:
+            if(scrollDirection == TimelineViewScrollDirectionVertical) {
+                contentOffset.y = CGRectGetMidY(cellFrame) - roundf(size.height / 2);
+            }
+            else {
+                contentOffset.x = CGRectGetMidX(cellFrame) - roundf(size.width / 2);
+            }
+            break;
+        case TimelineViewScrollPositionBottom:
+            if(scrollDirection == TimelineViewScrollDirectionVertical) {
+                contentOffset.y = CGRectGetMaxY(cellFrame) - size.height;
+            }
+            else {
+                contentOffset.x = CGRectGetMaxX(cellFrame) - size.width;
+            }
+            break;
+    }
+    
+    [self setContentOffset:contentOffset animated:animated];
 }
 
 @end
