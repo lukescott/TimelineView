@@ -6,6 +6,7 @@
 
 #import "ViewController.h"
 #import "TimelineView.h"
+#import "TimelineView+Gestures.h"
 #import "SampleTimelineViewCell.h"
 
 @interface ViewController ()
@@ -34,6 +35,7 @@
     
     data = [[NSMutableArray alloc] initWithCapacity:num];
     
+    // Make a bunch of random data
     for(NSInteger i = 0; i < num; ++i) {
         UIColor *color;
         NSInteger colorInt = 0;
@@ -64,14 +66,24 @@
             @"num":@(i)}];
     }
     
-    // Can go in the horizontal direction as well
-    //_timelineView.direction = TimelineScrollDirectionHorizontal;
-    
-    //[_timelineView registerClass:[SampleTimelineViewCell class]
-    //  forCellWithReuseIdentifier:@"SampleTimelineViewCell"];
-    
     [_timelineView registerNib:[UINib nibWithNibName:@"SampleTimelineViewCell" bundle:nil]
     forCellWithReuseIdentifier:@"SampleTimelineViewCell"];
+    
+    _timelineView.allowsMultipleSelection = YES;
+    
+    // Change delete/insert animation to shrink effect
+    _timelineView.animationBlock = ^(NSMapTable *moved, NSSet *deleted, NSSet *inserted) {
+        for(TimelineViewCell *cell in moved) {
+            cell.frame = [[moved objectForKey:cell] CGRectValue];
+        }
+        for(TimelineViewCell *cell in deleted) {
+            cell.transform = CGAffineTransformScale(cell.transform, 0, 0);
+        }
+        for(TimelineViewCell *cell in inserted) {
+            cell.transform = CGAffineTransformScale(cell.transform, 0, 0);
+            cell.transform = CGAffineTransformIdentity;
+        }
+    };
 }
 
 - (CGSize)contentSizeForTimelineView:(TimelineView *)timelineView
@@ -111,10 +123,39 @@
 
 - (void)timelineView:(TimelineView *)timelineView moveItemAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame
 {
-    NSDictionary *info = [[data objectAtIndex:sourceIndex] mutableCopy];
+    NSDictionary *info = [data objectAtIndex:sourceIndex];
     
     [data removeObjectAtIndex:sourceIndex];
     [data insertObject:@{@"rect": NSStringFromCGRect(frame), @"color": info[@"color"], @"num": info[@"num"]} atIndex:destinationIndex];
+}
+
+- (IBAction)deleteButtonPush:(id)sender
+{
+    NSIndexSet *indexSet = _timelineView.indexSetForSelectedItems;
+    
+    [data removeObjectsAtIndexes:indexSet];
+    [_timelineView deleteItemsAtIndexSet:indexSet];
+}
+
+- (IBAction)swapButtonPush:(id)sender
+{
+    NSIndexSet *indexSet = _timelineView.indexSetForSelectedItems;
+    
+    if(indexSet.count != 2) {
+        NSLog(@"No more than 2 items selected!");
+        return;
+    }
+    
+    NSDictionary *firstInfo = [data objectAtIndex:indexSet.firstIndex];
+    NSDictionary *lastInfo = [data objectAtIndex:indexSet.lastIndex];
+    
+    [data replaceObjectAtIndex:indexSet.firstIndex withObject:@{@"rect": firstInfo[@"rect"], @"color": lastInfo[@"color"], @"num": lastInfo[@"num"]}];
+    [data replaceObjectAtIndex:indexSet.lastIndex withObject:@{@"rect": lastInfo[@"rect"], @"color": firstInfo[@"color"], @"num": firstInfo[@"num"]}];
+    
+    [_timelineView performBatchUpdates:^{
+        [_timelineView moveItemAtIndex:indexSet.firstIndex toIndex:indexSet.lastIndex];
+        [_timelineView moveItemAtIndex:indexSet.lastIndex toIndex:indexSet.firstIndex];
+    } completion:nil];
 }
 
 @end

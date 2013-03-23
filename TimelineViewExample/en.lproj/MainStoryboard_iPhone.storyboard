@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="12C3006" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="2083"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="5">
+            <objects>
+                <viewController id="2" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="3">
+                        <rect key="frame" x="0.0" y="20" width="320" height="548"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aFp-ZK-qgO">
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <state key="normal" title="Delete">
+                                    <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="deleteButtonPush:" destination="2" eventType="touchUpInside" id="SMM-TB-xS7"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aOr-Ny-DuX">
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <state key="normal" title="Swap">
+                                    <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="swapButtonPush:" destination="2" eventType="touchUpInside" id="AtW-gK-Di5"/>
+                                </connections>
+                            </button>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="GoJ-o7-cOb" customClass="TimelineView">
+                                <color key="backgroundColor" white="0.87360287410000004" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="128" type="user" id="APv-HH-1q6"/>
+                                </constraints>
+                                <connections>
+                                    <outlet property="dataSource" destination="2" id="FXA-jK-EIW"/>
+                                    <outlet property="delegate" destination="2" id="H2a-Bi-LKn"/>
+                                </connections>
+                            </scrollView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="GoJ-o7-cOb" firstAttribute="bottom" secondItem="3" secondAttribute="bottom" type="default" id="0at-Ub-GL2"/>
+                            <constraint firstItem="aFp-ZK-qgO" firstAttribute="top" secondItem="3" secondAttribute="top" constant="9" id="G1w-JP-n3H"/>
+                            <constraint firstItem="GoJ-o7-cOb" firstAttribute="centerX" secondItem="3" secondAttribute="centerX" type="user" id="O0a-9z-Zad"/>
+                            <constraint firstItem="aOr-Ny-DuX" firstAttribute="top" secondItem="aFp-ZK-qgO" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="cp9-1h-ojg"/>
+                            <constraint firstItem="aOr-Ny-DuX" firstAttribute="leading" secondItem="3" secondAttribute="leading" constant="10" id="ja4-1w-NLr"/>
+                            <constraint firstItem="GoJ-o7-cOb" firstAttribute="top" secondItem="3" secondAttribute="top" type="default" id="jep-Go-ad1"/>
+                            <constraint firstItem="aOr-Ny-DuX" firstAttribute="leading" secondItem="aFp-ZK-qgO" secondAttribute="leading" type="default" id="tsf-EJ-8JE"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="timelineView" destination="GoJ-o7-cOb" id="zao-lH-41W"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="4" sceneMemberID="firstResponder"/>
+            </objects>
+        </scene>
+    </scenes>
+    <classes>
+        <class className="NSLayoutConstraint" superclassName="NSObject">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
+        </class>
+        <class className="TimelineView" superclassName="UIScrollView">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/TimelineView.h"/>
+            <relationships>
+                <relationship kind="outlet" name="dataSource"/>
+                <relationship kind="outlet" name="delegate"/>
+            </relationships>
+        </class>
+        <class className="ViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="deleteButtonPush:"/>
+                <relationship kind="action" name="swapButtonPush:"/>
+                <relationship kind="outlet" name="timelineView" candidateClass="TimelineView"/>
+            </relationships>
+        </class>
+    </classes>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <simulatedStatusBarMetrics key="statusBar"/>
+        <simulatedOrientationMetrics key="orientation"/>
+        <simulatedScreenMetrics key="destination" type="retina4"/>
+    </simulatedMetricsContainer>
+</document>

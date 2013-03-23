@@ -7,9 +7,7 @@
 #import "SampleTimelineViewCell.h"
 
 @interface SampleTimelineViewCell ()
-{
-    CGAffineTransform transform;
-}
+
 @end
 
 @implementation SampleTimelineViewCell
@@ -79,15 +77,13 @@
     [super setDragging:dragging];
     
     if(dragging) {
-        transform = self.transform;
-        
         [UIView animateWithDuration:0.3 animations:^{
             self.transform = CGAffineTransformScale(self.transform, .9f, .9f);
         }];
     }
     else {
         [UIView animateWithDuration:0.3 animations:^{
-            self.transform = transform;
+            self.transform = CGAffineTransformIdentity;
         }];
     }
 }

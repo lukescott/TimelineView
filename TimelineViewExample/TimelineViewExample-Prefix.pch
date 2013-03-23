@@ -1,5 +1,5 @@
 //
-// Prefix header for all source files of the 'TimelineView' target in the 'TimelineView' project
+// Prefix header for all source files of the 'TimelineViewExample' target in the 'TimelineViewExample' project
 //
 
 #import <Availability.h>

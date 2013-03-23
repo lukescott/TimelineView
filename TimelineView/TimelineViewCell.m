@@ -29,6 +29,7 @@
 
 - (void)prepareForReuse
 {
+    self.transform = CGAffineTransformIdentity;
     self.highlighted = NO;
     self.selected = NO;
 }

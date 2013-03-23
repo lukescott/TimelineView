@@ -9,6 +9,8 @@
 
 @interface ViewController : UIViewController <TimelineViewDataSource, TimelineViewDelegate>
 
-@property (weak, nonatomic) IBOutlet TimelineView *timelineView;
+- (IBAction)deleteButtonPush:(id)sender;
+- (IBAction)swapButtonPush:(id)sender;
 
+@property (weak, nonatomic) IBOutlet TimelineView *timelineView;
 @end

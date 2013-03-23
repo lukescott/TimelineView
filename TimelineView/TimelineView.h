@@ -20,6 +20,8 @@ typedef enum {
     TimelineViewScrollPositionBottom
 } TimelineViewScrollPosition;
 
+typedef void (^TimelineViewAnimationBlock)(NSMapTable *moved, NSSet *deleted, NSSet *inserted);
+
 @interface TimelineView : UIScrollView
 
 - (void)reloadData;
@@ -34,24 +36,24 @@ typedef enum {
 - (NSIndexSet *)indexSetForVisibleItems;
 - (NSArray *)visibleCells;
 
-//- (void)insertItemAtIndex:(NSInteger)index;
-//- (void)insertItemsAtIndexSet:(NSIndexSet *)indexSet;
-//- (void)deleteItemAtIndex:(NSInteger)index;
-//- (void)deleteItemsAtIndexSet:(NSIndexSet *)indexSet;
-//- (void)moveItemAtIndex:(NSInteger)index toIndex:(NSInteger)newIndex;
-//- (void)performBatchUpdates:(void (^)(void))updates completion:(void (^)(BOOL finished))completion;
+- (void)insertItemAtIndex:(NSInteger)index;
+- (void)insertItemsAtIndexSet:(NSIndexSet *)indexSet;
+- (void)deleteItemAtIndex:(NSInteger)index;
+- (void)deleteItemsAtIndexSet:(NSIndexSet *)indexSet;
+- (void)moveItemAtIndex:(NSInteger)index toIndex:(NSInteger)newIndex;
+- (void)performBatchUpdates:(void (^)(void))updates completion:(void (^)(BOOL finished))completion;
 
 - (void)scrollToItemAtIndex:(NSInteger)index atScrollPosition:(TimelineViewScrollPosition)scrollPosition animated:(BOOL)animated;
-
 
 @property (weak, nonatomic) IBOutlet id<TimelineViewDataSource>dataSource;
 @property (weak, nonatomic) IBOutlet id<TimelineViewDelegate,UIScrollViewDelegate>delegate;
 @property (readonly, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
 @property (readonly, nonatomic) UILongPressGestureRecognizer *longPressGestureRecognizer;
 @property (assign, nonatomic) TimelineViewScrollDirection scrollDirection;
+@property (strong, nonatomic) TimelineViewAnimationBlock animationBlock;
 @property (assign, nonatomic) BOOL allowsSelection;
 @property (assign, nonatomic) BOOL allowsMultipleSelection;
+@property (assign, nonatomic) BOOL scrollingSpeedScaled;
 @property (assign, nonatomic) UIEdgeInsets scrollingEdgeInsets;
 @property (assign, nonatomic) CGFloat scrollingSpeed;
-@property (assign, nonatomic) BOOL scrollingSpeedScaled;
 @end
