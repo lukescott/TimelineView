@@ -48,10 +48,25 @@
                                     <outlet property="delegate" destination="2" id="uRQ-IY-GbJ"/>
                                 </connections>
                             </scrollView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gpg-43-2Ck">
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <state key="normal" title="Insert on top">
+                                    <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="insertTopButtonPush:" destination="2" eventType="touchUpInside" id="0TG-50-ttn"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
+                            <constraint firstItem="gpg-43-2Ck" firstAttribute="leading" secondItem="5" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="Ao1-Bl-7R6"/>
                             <constraint firstItem="Wmk-Oq-mlI" firstAttribute="leading" secondItem="5" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="CdB-om-1xs"/>
+                            <constraint firstItem="gpg-43-2Ck" firstAttribute="top" secondItem="Wmk-Oq-mlI" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="FRs-jk-1Pu"/>
                             <constraint firstItem="bxe-og-7UD" firstAttribute="top" secondItem="5" secondAttribute="top" constant="20" symbolic="YES" type="default" id="Pee-EE-ZG7"/>
                             <constraint firstItem="bxe-og-7UD" firstAttribute="leading" secondItem="5" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="ZRa-bS-F4m"/>
                             <constraint firstItem="ATi-7h-e3p" firstAttribute="top" secondItem="5" secondAttribute="top" type="default" id="dFT-HG-H9f"/>
@@ -84,6 +99,7 @@
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
             <relationships>
                 <relationship kind="action" name="deleteButtonPush:"/>
+                <relationship kind="action" name="insertTopButtonPush:"/>
                 <relationship kind="action" name="swapButtonPush:"/>
                 <relationship kind="outlet" name="timelineView" candidateClass="TimelineView"/>
             </relationships>

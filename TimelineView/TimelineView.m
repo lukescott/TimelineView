@@ -112,7 +112,7 @@
     return animationBlock;
 }
 
-#pragma mark ...
+#pragma mark Creating Cells
 #pragma mark -
 
 - (void)registerClass:(Class)cellClass forCellWithReuseIdentifier:(NSString *)identifier
@@ -159,6 +159,9 @@
     return dequeuedCell;
 }
 
+#pragma mark Reloading Content
+#pragma mark -
+
 - (void)reloadData
 {
     for(TimelineViewCell *cell in visibleCells) {
@@ -176,131 +179,42 @@
     [self tileCells];
 }
 
-- (void)setScrollDirection:(TimelineViewScrollDirection)newDirection
-{
-    scrollDirection = newDirection;
-}
-
-- (NSInteger)indexForSelectedItem
-{
-    return [selectedIndexes firstIndex];
-}
-
-- (NSInteger)indexForItemAtPoint:(CGPoint)point
-{
-    NSRange range = [self findRangeInRect:CGRectMake(point.x, point.y, 1, 1)];
-    
-    return range.length > 0 ? range.location : NSNotFound;
-}
-
-- (NSIndexSet *)indexSetForSelectedItems
-{
-    return [[NSIndexSet alloc] initWithIndexSet:selectedIndexes];
-}
-
-- (NSIndexSet *)indexSetForItemsInRect:(CGRect)rect
-{
-    NSRange range = [self findRangeInRect:rect];
-    
-    if(!range.length) {
-        return nil;
-    }
-    
-    return [NSIndexSet indexSetWithIndexesInRange:range];
-}
-
-- (NSIndexSet *)indexSetForVisibleItems
-{
-    return [NSIndexSet indexSetWithIndexesInRange:visibleRange];
-}
+#pragma mark State of TimelineView
+#pragma mark -
 
 - (NSArray *)visibleCells
 {
     return [visibleCells allObjects];
 }
 
-- (TimelineViewCell *)cellForItemAtIndex:(NSInteger)index
-{
-    TimelineViewCell *cell;
-    for(TimelineViewCell *otherCell in visibleCells) {
-        if(otherCell.index == index) {
-            cell = otherCell;
-            break;
-        }
-    }
-    return cell;
-}
+#pragma mark Inserting, Moving, and Deleting Items
+#pragma mark -
 
-- (void)selectItemAtIndex:(NSInteger)index
+- (NSInteger)indexForInsertingFrame:(CGRect)frame
 {
-    if(!allowsSelection) {
-        return;
-    }
-    for(TimelineViewCell *cell in visibleCells) {
-        if(cell.index == index) {
-            cell.selected = YES;
-        }
-        else if (!allowsMultipleSelection) {
-            cell.selected = NO;
-        }
-    }
-    if(!allowsMultipleSelection) {
-        [selectedIndexes removeAllIndexes];
-    }
-    [selectedIndexes addIndex:index];
-}
-
-- (void)deselectItemAtIndex:(NSInteger)index
-{
-    if(!allowsSelection) {
-        return;
-    }
-    for(TimelineViewCell *cell in visibleCells) {
-        if(cell.index == index) {
-            cell.selected = NO;
-        }
-    }
-    [selectedIndexes removeIndex:index];
-}
-
-- (void)scrollToItemAtIndex:(NSInteger)index atScrollPosition:(TimelineViewScrollPosition)scrollPosition animated:(BOOL)animated
-{
-    CGRect cellFrame = [self frameForItemAtIndex:index];
-    CGPoint contentOffset = self.contentOffset;
-    CGSize size = self.bounds.size;
+    CGRect minFrame = frame;
+    NSRange range;
+    NSInteger index = 0;
     
-    if(CGRectEqualToRect(cellFrame, CGRectZero)) {
-        return;
+    if(scrollDirection == TimelineViewScrollDirectionVertical) {
+        minFrame.size.height = 1;
+    }
+    else {
+        minFrame.size.width = 1;
     }
     
-    switch (scrollPosition) {
-        case TimelineViewScrollPositionTop:
-            if(scrollDirection == TimelineViewScrollDirectionVertical) {
-                contentOffset.y = CGRectGetMinY(cellFrame);
-            }
-            else {
-                contentOffset.x = CGRectGetMinX(cellFrame);
-            }
-            break;
-        case TimelineViewScrollPositionCenter:
-            if(scrollDirection == TimelineViewScrollDirectionVertical) {
-                contentOffset.y = CGRectGetMidY(cellFrame) - roundf(size.height / 2);
-            }
-            else {
-                contentOffset.x = CGRectGetMidX(cellFrame) - roundf(size.width / 2);
-            }
-            break;
-        case TimelineViewScrollPositionBottom:
-            if(scrollDirection == TimelineViewScrollDirectionVertical) {
-                contentOffset.y = CGRectGetMaxY(cellFrame) - size.height;
-            }
-            else {
-                contentOffset.x = CGRectGetMaxX(cellFrame) - size.width;
-            }
-            break;
+    range = [self findRangeInRect:minFrame];
+    
+    if(range.location != NSNotFound) {
+        index = range.location + 1;
     }
     
-    [self setContentOffset:contentOffset animated:animated];
+    return index;
+}
+
+- (void)insertItemAtIndex:(NSInteger)index
+{
+    [self insertItemsAtIndexSet:[NSIndexSet indexSetWithIndex:index]];
 }
 
 - (void)insertItemsAtIndexSet:(NSIndexSet *)indexSet
@@ -315,6 +229,11 @@
     }
 }
 
+- (void)deleteItemAtIndex:(NSInteger)index
+{
+    [self deleteItemsAtIndexSet:[NSIndexSet indexSetWithIndex:index]];
+}
+
 - (void)deleteItemsAtIndexSet:(NSIndexSet *)indexSet
 {
     if(batching > 0) {
@@ -325,18 +244,6 @@
             [indexesToDelete addIndexes:indexSet];
         } completion:nil];
     }
-}
-
-
-- (void)insertItemAtIndex:(NSInteger)index
-{
-    [self insertItemsAtIndexSet:[NSIndexSet indexSetWithIndex:index]];
-}
-
-
-- (void)deleteItemAtIndex:(NSInteger)index
-{
-    [self deleteItemsAtIndexSet:[NSIndexSet indexSetWithIndex:index]];
 }
 
 - (void)moveItemAtIndex:(NSInteger)index toIndex:(NSInteger)newIndex
@@ -381,6 +288,157 @@
     indexesToInsert = pIndexesToInsert;
     indexesToMove = pIndexesToMove;
     --batching;
+}
+
+#pragma mark Managing the Selection
+#pragma mark -
+
+- (void)selectItemAtIndex:(NSInteger)index
+{
+    if(!allowsSelection) {
+        return;
+    }
+    for(TimelineViewCell *cell in visibleCells) {
+        if(cell.index == index) {
+            cell.selected = YES;
+        }
+        else if (!allowsMultipleSelection) {
+            cell.selected = NO;
+        }
+    }
+    if(!allowsMultipleSelection) {
+        [selectedIndexes removeAllIndexes];
+    }
+    [selectedIndexes addIndex:index];
+}
+
+- (void)deselectItemAtIndex:(NSInteger)index
+{
+    if(!allowsSelection) {
+        return;
+    }
+    for(TimelineViewCell *cell in visibleCells) {
+        if(cell.index == index) {
+            cell.selected = NO;
+        }
+    }
+    [selectedIndexes removeIndex:index];
+}
+
+#pragma mark Locating Items in Timeline View
+#pragma mark -
+
+- (NSInteger)indexForSelectedItem
+{
+    return [selectedIndexes firstIndex];
+}
+
+- (NSInteger)indexForItemAtPoint:(CGPoint)point
+{
+    NSInteger index = NSNotFound;
+    
+    if(CGRectContainsPoint(self.bounds, point)) {
+        TimelineViewCell *cell = [self cellAtPoint:point];
+        if(cell) {
+            index = cell.index;
+        }
+    }
+    else {
+        NSRange range = [self findRangeInRect:CGRectMake(point.x, point.y, 1, 1)];
+        if(range.length > 0) {
+            index = range.location;
+        }
+    }
+    
+    return index;
+}
+
+- (NSIndexSet *)indexSetForSelectedItems
+{
+    return [[NSIndexSet alloc] initWithIndexSet:selectedIndexes];
+}
+
+- (NSIndexSet *)indexSetForItemsInRect:(CGRect)rect
+{
+    NSRange range = [self findRangeInRect:rect];
+    
+    if(!range.length) {
+        return nil;
+    }
+    
+    return [NSIndexSet indexSetWithIndexesInRange:range];
+}
+
+- (NSIndexSet *)indexSetForVisibleItems
+{
+    return [NSIndexSet indexSetWithIndexesInRange:visibleRange];
+}
+
+- (TimelineViewCell *)cellForItemAtIndex:(NSInteger)index
+{
+    TimelineViewCell *cell;
+    for(TimelineViewCell *otherCell in visibleCells) {
+        if(otherCell.index == index) {
+            cell = otherCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (TimelineViewCell *)cellAtPoint:(CGPoint)point
+{
+    TimelineViewCell *cell;
+    for(UIView *subview in self.subviews.reverseObjectEnumerator) {
+        if(CGRectContainsPoint(subview.frame, point) && [visibleCells member:subview]) {
+            cell = (TimelineViewCell *)subview;
+            break;
+        }
+    }
+    return cell;
+}
+
+#pragma mark Scrolling an Item Into View
+#pragma mark -
+
+- (void)scrollToItemAtIndex:(NSInteger)index atScrollPosition:(TimelineViewScrollPosition)scrollPosition animated:(BOOL)animated
+{
+    CGRect cellFrame = [self frameForItemAtIndex:index];
+    CGPoint contentOffset = self.contentOffset;
+    CGSize size = self.bounds.size;
+    
+    if(CGRectEqualToRect(cellFrame, CGRectZero)) {
+        return;
+    }
+    
+    switch (scrollPosition) {
+        case TimelineViewScrollPositionTop:
+            if(scrollDirection == TimelineViewScrollDirectionVertical) {
+                contentOffset.y = CGRectGetMinY(cellFrame);
+            }
+            else {
+                contentOffset.x = CGRectGetMinX(cellFrame);
+            }
+            break;
+        case TimelineViewScrollPositionCenter:
+            if(scrollDirection == TimelineViewScrollDirectionVertical) {
+                contentOffset.y = CGRectGetMidY(cellFrame) - roundf(size.height / 2);
+            }
+            else {
+                contentOffset.x = CGRectGetMidX(cellFrame) - roundf(size.width / 2);
+            }
+            break;
+        case TimelineViewScrollPositionBottom:
+            if(scrollDirection == TimelineViewScrollDirectionVertical) {
+                contentOffset.y = CGRectGetMaxY(cellFrame) - size.height;
+            }
+            else {
+                contentOffset.x = CGRectGetMaxX(cellFrame) - size.width;
+            }
+            break;
+    }
+    
+    [self setContentOffset:contentOffset animated:animated];
 }
 
 @end

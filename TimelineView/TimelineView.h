@@ -24,24 +24,32 @@ typedef void (^TimelineViewAnimationBlock)(NSMapTable *moved, NSSet *deleted, NS
 
 @interface TimelineView : UIScrollView
 
-- (void)reloadData;
 - (void)registerClass:(Class)cellClass forCellWithReuseIdentifier:(NSString *)identifier;
 - (void)registerNib:(UINib *)nib forCellWithReuseIdentifier:(NSString *)identifier;
 - (TimelineViewCell *)dequeueReusableCellWithReuseIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
 
-- (NSInteger)indexForSelectedItem;
-- (NSInteger)indexForItemAtPoint:(CGPoint)point;
-- (NSIndexSet *)indexSetForSelectedItems;
-- (NSIndexSet *)indexSetForItemsInRect:(CGRect)rect;
-- (NSIndexSet *)indexSetForVisibleItems;
+- (void)reloadData;
+
 - (NSArray *)visibleCells;
 
+- (NSInteger)indexForInsertingFrame:(CGRect)frame;
 - (void)insertItemAtIndex:(NSInteger)index;
 - (void)insertItemsAtIndexSet:(NSIndexSet *)indexSet;
 - (void)deleteItemAtIndex:(NSInteger)index;
 - (void)deleteItemsAtIndexSet:(NSIndexSet *)indexSet;
 - (void)moveItemAtIndex:(NSInteger)index toIndex:(NSInteger)newIndex;
 - (void)performBatchUpdates:(void (^)(void))updates completion:(void (^)(BOOL finished))completion;
+
+- (void)selectItemAtIndex:(NSInteger)index;
+- (void)deselectItemAtIndex:(NSInteger)index;
+
+- (NSInteger)indexForSelectedItem;
+- (NSInteger)indexForItemAtPoint:(CGPoint)point;
+- (NSIndexSet *)indexSetForSelectedItems;
+- (NSIndexSet *)indexSetForItemsInRect:(CGRect)rect;
+- (NSIndexSet *)indexSetForVisibleItems;
+- (TimelineViewCell *)cellForItemAtIndex:(NSInteger)index;
+- (TimelineViewCell *)cellAtPoint:(CGPoint)point;
 
 - (void)scrollToItemAtIndex:(NSInteger)index atScrollPosition:(TimelineViewScrollPosition)scrollPosition animated:(BOOL)animated;
 

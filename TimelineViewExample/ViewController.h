@@ -11,6 +11,7 @@
 
 - (IBAction)deleteButtonPush:(id)sender;
 - (IBAction)swapButtonPush:(id)sender;
+- (IBAction)insertTopButtonPush:(id)sender;
 
 @property (weak, nonatomic) IBOutlet TimelineView *timelineView;
 @end

@@ -6,7 +6,6 @@
 
 #import "ViewController.h"
 #import "TimelineView.h"
-#import "TimelineView+Gestures.h"
 #import "SampleTimelineViewCell.h"
 
 @interface ViewController ()
@@ -18,10 +17,34 @@
 @implementation ViewController
 @synthesize timelineView = _timelineView;
 
+#pragma mark Helper Functions
+#pragma mark -
+
 - (NSInteger)randFrom:(NSInteger)from to:(NSInteger)to
 {
     return (arc4random() % to) + from;
 }
+
+- (UIColor *)colorByColorInt:(NSInteger)colorInt
+{
+    UIColor *color;
+    switch (colorInt) {
+        case 1: color = [UIColor redColor]; break;
+        case 2: color = [UIColor blackColor]; break;
+        case 3: color = [UIColor yellowColor]; break;
+        case 4: color = [UIColor orangeColor]; break;
+        case 5: color = [UIColor greenColor]; break;
+        case 6: color = [UIColor purpleColor]; break;
+        case 7: color = [UIColor brownColor]; break;
+        case 8: color = [UIColor blueColor]; break;
+        case 9: color = [UIColor magentaColor]; break;
+    }
+    
+    return color;
+}
+
+#pragma mark UIViewController
+#pragma mark -
 
 - (void)viewDidLoad
 {
@@ -47,18 +70,7 @@
         } while (colorInt == lastColorInt);
         
         lastColorInt = colorInt;
-        
-        switch (colorInt) {
-            case 1: color = [UIColor redColor]; break;
-            case 2: color = [UIColor blackColor]; break;
-            case 3: color = [UIColor yellowColor]; break;
-            case 4: color = [UIColor orangeColor]; break;
-            case 5: color = [UIColor greenColor]; break;
-            case 6: color = [UIColor purpleColor]; break;
-            case 7: color = [UIColor brownColor]; break;
-            case 8: color = [UIColor blueColor]; break;
-            case 9: color = [UIColor magentaColor]; break;
-        }
+        color = [self colorByColorInt:colorInt];
         
         [data addObject:@{
             @"rect":NSStringFromCGRect(CGRectMake(0.f, (CGFloat)lastPos, 128.f, 128.f)),
@@ -85,6 +97,9 @@
         }
     };
 }
+
+#pragma mark TimelineViewDataSource
+#pragma mark -
 
 - (CGSize)contentSizeForTimelineView:(TimelineView *)timelineView
 {
@@ -129,6 +144,9 @@
     [data insertObject:@{@"rect": NSStringFromCGRect(frame), @"color": info[@"color"], @"num": info[@"num"]} atIndex:destinationIndex];
 }
 
+#pragma mark Buttons
+#pragma mark -
+
 - (IBAction)deleteButtonPush:(id)sender
 {
     NSIndexSet *indexSet = _timelineView.indexSetForSelectedItems;
@@ -156,6 +174,21 @@
         [_timelineView moveItemAtIndex:indexSet.firstIndex toIndex:indexSet.lastIndex];
         [_timelineView moveItemAtIndex:indexSet.lastIndex toIndex:indexSet.firstIndex];
     } completion:nil];
+}
+
+- (IBAction)insertTopButtonPush:(id)sender
+{
+    CGRect cellFrame = CGRectMake(0, _timelineView.bounds.origin.y, 128.f, 128.f);
+    NSInteger index = [_timelineView indexForInsertingFrame:cellFrame];
+    NSString *rect = NSStringFromCGRect(cellFrame);
+    NSInteger colorInt = [self randFrom:1 to:9];
+    UIColor *color = [self colorByColorInt:colorInt];
+    NSArray *num = [NSString stringWithFormat:@"%c", [self randFrom:65 to:122]];
+    
+    NSLog(@"%d", index);
+    
+    [data insertObject:@{@"rect":rect, @"color":color, @"num": num} atIndex:index];
+    [_timelineView insertItemAtIndex:index];
 }
 
 @end

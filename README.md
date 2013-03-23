@@ -13,10 +13,10 @@ You must specify a content size. The TimelineView cannot assume what the content
 
 TimelineView asks for the frame size to determine the visible index range. It makes an educated guess what the top visible index is and works backward/forward until it finds the visible range. It will try to cache requests for the frame size.
 
-    - (CGRect)timelineView:(TimelineView *)timelineView cellFrameForIndex:(NSInteger)index
+    - (CGRect)timelineView:(TimelineView *)timelineView frameForCellAtIndex:(NSInteger)index
 
 When a user drags a cell to a new position it also passes the new frame (CGRect). You can use this to update your data source. It will determine the correct destination index, provided your data source is properly sorted.
 
-    (void)timelineView:(TimelineView *)timelineView moveCellAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame;
+    - (void)timelineView:(TimelineView *)timelineView moveItemAtIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex withFrame:(CGRect)frame
 
 Other than what is mentioned above, the TimelineView has the same delegate calls a UITableView / UICollectionView has, so it can be used (almost) identically.

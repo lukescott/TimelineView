@@ -24,18 +24,6 @@
     [self addGestureRecognizer:longPressGestureRecognizer];
 }
 
-- (TimelineViewCell *)cellAtPoint:(CGPoint)point
-{
-    TimelineViewCell *cell;
-    for(UIView *subview in self.subviews.reverseObjectEnumerator) {
-        if(CGRectContainsPoint(subview.frame, point) && [visibleCells member:subview]) {
-            cell = (TimelineViewCell *)subview;
-            break;
-        }
-    }
-    return cell;
-}
-
 #pragma mark Gestures
 #pragma mark -
 
@@ -287,7 +275,6 @@
     
     --updating;
     [cacheFrameLookup removeAllObjects];
-    //[self tileCells]; do i need this?
 }
 
 #pragma mark Drag & Scroll
