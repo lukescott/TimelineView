@@ -96,7 +96,7 @@
 
 - (BOOL)startSelectingCell:(TimelineViewCell *)cell
 {
-    if(allowsSelection) {
+    if(!allowsSelection) {
         return NO;
     }
     

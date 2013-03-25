@@ -29,6 +29,7 @@
     cellCount = 0;
     updating = 0;
     batching = 0;
+    allowsSelection = YES;
     visibleRange = NSMakeRange(0, 0);
     recycledCells = [[NSMutableSet alloc] init];
     visibleCells = [[NSMutableSet alloc] init];

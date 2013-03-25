@@ -185,8 +185,6 @@
     UIColor *color = [self colorByColorInt:colorInt];
     NSArray *num = [NSString stringWithFormat:@"%c", [self randFrom:65 to:122]];
     
-    NSLog(@"%d", index);
-    
     [data insertObject:@{@"rect":rect, @"color":color, @"num": num} atIndex:index];
     [_timelineView insertItemAtIndex:index];
 }
