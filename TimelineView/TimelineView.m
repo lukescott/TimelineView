@@ -74,6 +74,12 @@
 #pragma mark Properties
 #pragma mark -
 
+- (void)setDelegate:(id<TimelineViewDelegate,UIScrollViewDelegate>)value
+{
+    delegate = value;
+    [super setDelegate:value];
+}
+
 - (void)setAllowsSelection:(BOOL)value
 {
     allowsSelection = value;
