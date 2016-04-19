@@ -259,8 +259,8 @@
     
     if(existingKeys.count > 0 && ! [existingKeys containsObject:@(index)]) {
         @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                       reason:[NSString stringWithFormat:@"attempt to move items at indexes %@ and %d to same index %d",
-                                               [existingKeys lastObject], index, newIndex]
+                                       reason:[NSString stringWithFormat:@"attempt to move items at indexes %@ and %ld to same index %ld",
+                                               [existingKeys lastObject], (long)index, (long)newIndex]
                                      userInfo:nil];
     }
     
