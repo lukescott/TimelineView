@@ -13,7 +13,8 @@
 
 @implementation TimelineView
 @synthesize dataSource;
-@synthesize delegate;
+@synthesize timelineViewDelegate;
+//@synthesize delegate;
 @synthesize tapGestureRecognizer;
 @synthesize longPressGestureRecognizer;
 @synthesize scrollDirection;
@@ -74,10 +75,10 @@
 #pragma mark Properties
 #pragma mark -
 
-- (void)setDelegate:(id<TimelineViewDelegate,UIScrollViewDelegate>)value
+
+- (void)setTimelineViewDelegate:(id<TimelineViewDelegate>)value
 {
-    delegate = value;
-    [super setDelegate:value];
+    timelineViewDelegate = value;
 }
 
 - (void)setAllowsSelection:(BOOL)value
@@ -259,8 +260,8 @@
     
     if(existingKeys.count > 0 && ! [existingKeys containsObject:@(index)]) {
         @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                       reason:[NSString stringWithFormat:@"attempt to move items at indexes %@ and %d to same index %d",
-                                               [existingKeys lastObject], index, newIndex]
+                                       reason:[NSString stringWithFormat:@"attempt to move items at indexes %@ and %ld to same index %ld",
+                                               [existingKeys lastObject], (long)index, (long)newIndex]
                                      userInfo:nil];
     }
     

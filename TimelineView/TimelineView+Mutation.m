@@ -200,7 +200,7 @@
     
     if(cellCount != expectedCount) {
         @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                       reason:[NSString stringWithFormat:@"Invalid update: invalid number of items. The number of items after the update (%d) must be equal to the number of items before the update (%d), plus or minus the number of items inserted or deleted (%d inserted, %d deleted).", cellCount, pastCount, insertCount, deleteCount]
+                                       reason:[NSString stringWithFormat:@"Invalid update: invalid number of items. The number of items after the update (%ld) must be equal to the number of items before the update (%ld), plus or minus the number of items inserted or deleted (%ld inserted, %ld deleted).", (long)cellCount, (long)pastCount, (long)insertCount, (long)deleteCount]
                                      userInfo:nil];
     }
     

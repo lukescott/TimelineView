@@ -60,8 +60,8 @@
         if(cellIndex < startIndex || cellIndex > endIndex) {
             [cell removeFromSuperview];
             [cacheFrameLookup removeObjectForKey:@(cellIndex)];
-            if([delegate respondsToSelector:@selector(timelineView:didEndDisplayingCell:atIndex:)]) {
-                [delegate timelineView:self didEndDisplayingCell:cell atIndex:cellIndex];
+            if([timelineViewDelegate respondsToSelector:@selector(timelineView:didEndDisplayingCell:atIndex:)]) {
+                [timelineViewDelegate timelineView:self didEndDisplayingCell:cell atIndex:cellIndex];
             }
             [recycledCells addObject:cell];
         }
@@ -89,8 +89,8 @@
             }
             
             if(cell != nil) {
-                if([delegate respondsToSelector:@selector(timelineView:willDisplayCell:atIndex:)]) {
-                    [delegate timelineView:self willDisplayCell:cell atIndex:index];
+                if([timelineViewDelegate respondsToSelector:@selector(timelineView:willDisplayCell:atIndex:)]) {
+                    [timelineViewDelegate timelineView:self willDisplayCell:cell atIndex:index];
                 }
                 [visibleCells addObject:cell];
                 [self insertSubview:cell atIndex:0];

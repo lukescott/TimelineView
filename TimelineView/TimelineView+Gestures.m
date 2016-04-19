@@ -100,8 +100,8 @@
         return NO;
     }
     
-    if([delegate respondsToSelector:@selector(timelineView:shouldHighlightItemAtIndex:)] &&
-       [delegate timelineView:self shouldHighlightItemAtIndex:cell.index] == NO)
+    if([timelineViewDelegate respondsToSelector:@selector(timelineView:shouldHighlightItemAtIndex:)] &&
+       [timelineViewDelegate timelineView:self shouldHighlightItemAtIndex:cell.index] == NO)
     {
         return NO;
     }
@@ -109,8 +109,8 @@
     cell.highlighted = YES;
     [self bringSubviewToFront:cell];
     
-    if([delegate respondsToSelector:@selector(timelineView:didHighlightItemAtIndex:)]) {
-        [delegate timelineView:self didHighlightItemAtIndex:cell.index];
+    if([timelineViewDelegate respondsToSelector:@selector(timelineView:didHighlightItemAtIndex:)]) {
+        [timelineViewDelegate timelineView:self didHighlightItemAtIndex:cell.index];
     }
     
     if(allowsMultipleSelection == NO) {
@@ -128,8 +128,8 @@
 {
     cell.highlighted = NO;
     
-    if([delegate respondsToSelector:@selector(timelineView:didUnhighlightItemAtIndex:)]) {
-        [delegate timelineView:self didUnhighlightItemAtIndex:cell.index];
+    if([timelineViewDelegate respondsToSelector:@selector(timelineView:didUnhighlightItemAtIndex:)]) {
+        [timelineViewDelegate timelineView:self didUnhighlightItemAtIndex:cell.index];
     }
 }
 
@@ -139,8 +139,8 @@
     
     cell.highlighted = NO;
     
-    if([delegate respondsToSelector:@selector(timelineView:didUnhighlightItemAtIndex:)]) {
-        [delegate timelineView:self didUnhighlightItemAtIndex:cellIndex];
+    if([timelineViewDelegate respondsToSelector:@selector(timelineView:didUnhighlightItemAtIndex:)]) {
+        [timelineViewDelegate timelineView:self didUnhighlightItemAtIndex:cellIndex];
     }
     
     if(! allowsMultipleSelection) {
@@ -148,29 +148,29 @@
     }
     
     if(! allowsMultipleSelection || ! [selectedIndexes containsIndex:cellIndex]) {
-        if([delegate respondsToSelector:@selector(timelineView:willSelectItemAtIndex:)]) {
-            [delegate timelineView:self willSelectItemAtIndex:cellIndex];
+        if([timelineViewDelegate respondsToSelector:@selector(timelineView:willSelectItemAtIndex:)]) {
+            [timelineViewDelegate timelineView:self willSelectItemAtIndex:cellIndex];
         }
         
         cell.selected = YES;
         [selectedIndexes addIndex:cellIndex];
         
-        if([delegate respondsToSelector:@selector(timelineView:didSelectItemAtIndex:)]) {
-            [delegate timelineView:self didSelectItemAtIndex:cellIndex];
+        if([timelineViewDelegate respondsToSelector:@selector(timelineView:didSelectItemAtIndex:)]) {
+            [timelineViewDelegate timelineView:self didSelectItemAtIndex:cellIndex];
         }
     }
-    else if([delegate respondsToSelector:@selector(timelineView:shouldDeselectItemAtIndex:)] == NO ||
-            [delegate timelineView:self shouldDeselectItemAtIndex:cellIndex] == YES)
+    else if([timelineViewDelegate respondsToSelector:@selector(timelineView:shouldDeselectItemAtIndex:)] == NO ||
+            [timelineViewDelegate timelineView:self shouldDeselectItemAtIndex:cellIndex] == YES)
     {
-        if([delegate respondsToSelector:@selector(timelineView:willDeselectItemAtIndex:)]) {
-            [delegate timelineView:self willDeselectItemAtIndex:cellIndex];
+        if([timelineViewDelegate respondsToSelector:@selector(timelineView:willDeselectItemAtIndex:)]) {
+            [timelineViewDelegate timelineView:self willDeselectItemAtIndex:cellIndex];
         }
         
         cell.selected = NO;
         [selectedIndexes removeIndex:cellIndex];
         
-        if([delegate respondsToSelector:@selector(timelineView:didDeselectItemAtIndex:)]) {
-            [delegate timelineView:self didDeselectItemAtIndex:cellIndex];
+        if([timelineViewDelegate respondsToSelector:@selector(timelineView:didDeselectItemAtIndex:)]) {
+            [timelineViewDelegate timelineView:self didDeselectItemAtIndex:cellIndex];
         }
     }
 }
