@@ -127,7 +127,7 @@
     CGFloat cellMinX;
     
     if(count < 1) {
-        return (NSRange){0, 0};
+        return (NSRange){NSNotFound, 0};
     }
     
     // Discover closest visible index using binary tree
@@ -144,7 +144,7 @@
             searchRange = NSMakeRange(searchRange.location, searchRange.length / 2);
         }
         else if(cellMinX < minX) {
-            searchRange = NSMakeRange(estIndex + 1, searchRange.length / 2 - 1);
+            searchRange = NSMakeRange(estIndex + 1, searchRange.length / 2);
         }
         
         if(searchRange.length < 2) {
