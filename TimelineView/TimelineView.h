@@ -54,7 +54,8 @@ typedef void (^TimelineViewAnimationBlock)(NSMapTable *moved, NSSet *deleted, NS
 - (void)scrollToItemAtIndex:(NSInteger)index atScrollPosition:(TimelineViewScrollPosition)scrollPosition animated:(BOOL)animated;
 
 @property (weak, nonatomic) IBOutlet id<TimelineViewDataSource>dataSource;
-@property (weak, nonatomic) IBOutlet id<TimelineViewDelegate,UIScrollViewDelegate>delegate;
+@property (weak, nonatomic) IBOutlet id<TimelineViewDelegate>timelineViewDelegate;
+//@property (weak, nonatomic) IBOutlet id<UIScrollViewDelegate>delegate;
 @property (readonly, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
 @property (readonly, nonatomic) UILongPressGestureRecognizer *longPressGestureRecognizer;
 @property (assign, nonatomic) TimelineViewScrollDirection scrollDirection;

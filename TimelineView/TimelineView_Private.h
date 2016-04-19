@@ -32,7 +32,8 @@ CGPointSubtract_(CGPoint p1, CGPoint p2) {
 {
     // Properties
     __weak id<TimelineViewDataSource>dataSource;
-    __weak id<TimelineViewDelegate,UIScrollViewDelegate>delegate;
+    __weak id<TimelineViewDelegate>timelineViewDelegate;
+    //__weak id<UIScrollViewDelegate>delegate;
     UITapGestureRecognizer *tapGestureRecognizer;
     UILongPressGestureRecognizer *longPressGestureRecognizer;
     TimelineViewScrollDirection scrollDirection;

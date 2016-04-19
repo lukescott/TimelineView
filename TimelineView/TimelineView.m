@@ -13,7 +13,8 @@
 
 @implementation TimelineView
 @synthesize dataSource;
-@synthesize delegate;
+@synthesize timelineViewDelegate;
+//@synthesize delegate;
 @synthesize tapGestureRecognizer;
 @synthesize longPressGestureRecognizer;
 @synthesize scrollDirection;
@@ -74,10 +75,10 @@
 #pragma mark Properties
 #pragma mark -
 
-- (void)setDelegate:(id<TimelineViewDelegate,UIScrollViewDelegate>)value
+
+- (void)setTimelineViewDelegate:(id<TimelineViewDelegate>)value
 {
-    delegate = value;
-    [super setDelegate:value];
+    timelineViewDelegate = value;
 }
 
 - (void)setAllowsSelection:(BOOL)value
